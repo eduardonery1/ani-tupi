@@ -9,6 +9,19 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def is_firefox_installed_as_snap():
+    try:
+        result = subprocess.run(
+            ["snap", "list", "firefox"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return result.returncode == 0  # Return code 0 means Firefox is installed as a snap
+    except FileNotFoundError:
+        print("Snap is not installed on this system.")
+        return False
+
 if __name__=="__main__":
     url = "https://animefire.plus/pesquisar/" + "-".join(input("Pesquisar anime: ").split())
     print("Buscando...")
@@ -34,9 +47,13 @@ if __name__=="__main__":
 
     url_episode = episode_links[int(selected) - 1]
     print("Procurando video em:", url_episode)
-    options =webdriver.FirefoxOptions()
+    options = webdriver.FirefoxOptions()
     options.add_argument("--headless")
-    driver = webdriver.Firefox(options=options)
+    if is_firefox_installed_as_snap():
+        service = webdriver.FirefoxService(executable_path="/snap/bin/geckodriver")
+        driver = webdriver.Firefox(options=options, service = service)
+    else:
+        driver = webdriver.Firefox(options=options)
     driver.get(url_episode)
 
     try:
